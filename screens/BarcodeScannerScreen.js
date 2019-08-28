@@ -35,7 +35,7 @@ export default class BarcodeScannerScreen extends React.Component {
 
   alertInfo = () => {
       var title = this.state.bookInfo;
-      alert(`Title: ${title} was scanned!`);
+      alert(`"${title}" was scanned!`);
   }
 
 
