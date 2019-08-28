@@ -4,7 +4,7 @@ import { Searchbar } from 'react-native-paper';
 export function Search() {
     return (
       <Searchbar
-      style={{marginTop: 60}}
+        style={{marginTop: 50}}
         placeholder="Search"
       />
     );
