@@ -9,7 +9,8 @@ export default class BarcodeScannerScreen extends React.Component {
   state = {
     hasCameraPermission: null,
     scanned: false,
-  };
+    bookInfo: null
+    };
 
   async componentDidMount() {
     this.getPermissionsAsync();
@@ -19,6 +20,30 @@ export default class BarcodeScannerScreen extends React.Component {
     const { status } = await Permissions.askAsync(Permissions.CAMERA);
     this.setState({ hasCameraPermission: status === 'granted' });
   }
+
+  fetchData(isbn, callback) {
+    fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}`)
+        .then(response => response.json())
+        .then(responseJson => {
+            this.setState({ bookInfo: responseJson.items[0].volumeInfo.title});
+            callback();
+        })
+    .catch(error => {
+      console.error(error);
+    });
+  }
+
+  alertInfo = () => {
+      var title = this.state.bookInfo;
+      alert(`Title: ${title} was scanned!`);
+  }
+
+
+  handleBarCodeScanned = ({ data }) => {
+    var isbn = data;
+    this.setState({ scanned: true });
+    this.fetchData(isbn, this.alertInfo);
+  };
 
   render() {
     const { hasCameraPermission, scanned } = this.state;
@@ -50,11 +75,6 @@ export default class BarcodeScannerScreen extends React.Component {
       </View>
     );
   }
-
-  handleBarCodeScanned = ({ type, data }) => {
-    this.setState({ scanned: true });
-    alert(`Bar code with type ${type} and data ${data} has been scanned!`);
-  };
 }
 
 
