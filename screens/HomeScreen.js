@@ -1,6 +1,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
 import {
+  Button,
   Image,
   Platform,
   ScrollView,
@@ -19,6 +20,11 @@ export default function HomeScreen() {
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}>
+        <Button
+          title="+"
+          color="#841584"
+          accessibilityLabel="Add new book to shelf"
+        />
         <Search />
         <View style={styles.welcomeContainer}>
           <Image
