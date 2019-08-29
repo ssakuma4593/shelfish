@@ -9,25 +9,46 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SQLite } from 'expo-sqlite';
 
 import { MonoText } from '../components/StyledText';
 import { Search } from '../components/Search';
 
-export default function HomeScreen() {
-  return (
-    <View style={styles.container}>
-      <Search />
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}>
+const booksDb = SQLite.openDatabase("books.db");
 
-        <Text style={styles.getStartedText}>
-          Welcome to Shelfish!
-        </Text>
+export default class HomeScreen extends React.Component {
 
-      </ScrollView>
-    </View>
-  );
+  state ={
+    items: null
+  }
+
+  componentDidMount() {
+    booksDb.transaction(tx => {
+      tx.executeSql(
+        `select * from books;`,
+        (_, { rows: { _array } }) => this.setState({ items: _array })
+      );
+    });
+  }
+  render() {
+    const { items } = this.state;
+    console.log(this.state.items);
+
+    return (
+      <View style={styles.container}>
+        <Search />
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.contentContainer}>
+
+          <Text style={styles.getStartedText}>
+            Welcome to Shelfish!
+          </Text>
+          <Text> {this.state.items} </Text>
+        </ScrollView>
+      </View>
+    );
+  }
 }
 
 HomeScreen.navigationOptions = {
