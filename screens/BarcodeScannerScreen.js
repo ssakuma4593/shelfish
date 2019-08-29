@@ -2,18 +2,27 @@ import * as React from 'react';
 import { Text, View, StyleSheet, Button } from 'react-native';
 import Constants from 'expo-constants';
 import * as Permissions from 'expo-permissions';
+import { SQLite } from 'expo-sqlite';
 
 import { BarCodeScanner } from 'expo-barcode-scanner';
+
+const booksDb = SQLite.openDatabase("books.db");
 
 export default class BarcodeScannerScreen extends React.Component {
   state = {
     hasCameraPermission: null,
     scanned: false,
-    bookInfo: null
+    bookInfo: null,
+    errors: null
     };
 
   async componentDidMount() {
     this.getPermissionsAsync();
+    booksDb.transaction(tx => {
+        tx.executeSql(
+          "CREATE TABLE IF NOT EXISTS books (id integer primary key not null, title text, userid int);"
+        );
+      });
   }
 
   getPermissionsAsync = async () => {
@@ -30,20 +39,40 @@ export default class BarcodeScannerScreen extends React.Component {
         })
     .catch(error => {
       console.error(error);
+      this.setState({ errors: error});
     });
   }
 
   alertInfo = () => {
-      var title = this.state.bookInfo.title;
-      alert(`"${title}" was scanned!`);
+      if (this.state.errors) {
+        alert(`Could not scan. Please try again.`);
+      }
+      else {
+        alert(`"${this.state.bookInfo.title}" was scanned!`);
+      }
   }
 
 
   handleBarCodeScanned = ({ data }) => {
     var isbn = data;
+    // this series of sequential events could be written better
     this.setState({ scanned: true });
-    this.fetchData(isbn, this.alertInfo);
-  };
+    this.fetchData(isbn, this.addBookToMyShelf);
+  }
+
+  addBookToMyShelf = () => {
+    if (this.state.errors) {
+        return false;
+    }
+    booksDb.transaction(
+        tx => {
+          tx.executeSql("insert into books (title, userID) values (?, 1)", [this.state.bookInfo.title]);
+          tx.executeSql("select * from books", [], (_, { rows }) =>
+            console.log(JSON.stringify(rows))
+          );
+        }
+    );
+  }
 
   render() {
     const { hasCameraPermission, scanned } = this.state;
