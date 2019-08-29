@@ -25,7 +25,7 @@ export default class BarcodeScannerScreen extends React.Component {
     fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}`)
         .then(response => response.json())
         .then(responseJson => {
-            this.setState({ bookInfo: responseJson.items[0].volumeInfo.title});
+            this.setState({ bookInfo: responseJson.items[0].volumeInfo});
             callback();
         })
     .catch(error => {
@@ -34,7 +34,7 @@ export default class BarcodeScannerScreen extends React.Component {
   }
 
   alertInfo = () => {
-      var title = this.state.bookInfo;
+      var title = this.state.bookInfo.title;
       alert(`"${title}" was scanned!`);
   }
 
