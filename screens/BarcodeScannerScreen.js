@@ -13,16 +13,17 @@ export default class BarcodeScannerScreen extends React.Component {
     hasCameraPermission: null,
     scanned: false,
     bookInfo: null,
+    isbn: null,
     errors: null
-    };
+  };
 
   async componentDidMount() {
     this.getPermissionsAsync();
     booksDb.transaction(tx => {
-        tx.executeSql(
-          "CREATE TABLE IF NOT EXISTS books (id integer primary key not null, title text, userid int);"
-        );
-      });
+      tx.executeSql(
+        "CREATE TABLE IF NOT EXISTS books (isbn integer primary key not null, title text, author text, userid int);"
+      );
+    });
   }
 
   getPermissionsAsync = async () => {
@@ -32,49 +33,51 @@ export default class BarcodeScannerScreen extends React.Component {
 
   fetchData(isbn, callback) {
     fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}`)
-        .then(response => response.json())
-        .then(responseJson => {
-            this.setState({ bookInfo: responseJson.items[0].volumeInfo});
-            callback();
-        })
-    .catch(error => {
-      console.error(error);
-      this.setState({ errors: error});
-    });
+      .then(response => response.json())
+      // TODO: catch when book is not found
+      .then(responseJson => {
+        this.setState({ bookInfo: responseJson.items[0].volumeInfo });
+        callback();
+      })
+      .catch(error => {
+        console.error(error);
+        this.setState({ errors: error });
+      });
+    console.log(this.state.bookInfo)
   }
 
   alertInfo = () => {
-      if (this.state.errors) {
-        alert(`Could not scan. Please try again.`);
-      }
-      else {
-        alert(`"${this.state.bookInfo.title}" was scanned!`);
-      }
+    if (this.state.errors) {
+      alert(`Could not scan. Please try again.`);
+    }
+    else {
+      alert(`"${this.state.bookInfo.title}" was scanned!`);
+    }
   }
 
 
   handleBarCodeScanned = ({ data }) => {
-    var isbn = data;
     // this series of sequential events could be written better
-    this.setState({ scanned: true });
-    this.fetchData(isbn, this.addBookToMyShelf);
+    this.setState({ scanned: true, isbn: data });
+    console.log(this.state.isbn)
+    this.fetchData(data, this.addBookToMyShelf);
   }
 
   addBookToMyShelf = () => {
     if (this.state.errors) {
-        return false;
+      return false;
     }
     // TODO: Add exception cases
     booksDb.transaction(
-        tx => {
-          // TODO: Don't add books that are already attached to the user
-          tx.executeSql("INSERT OR REPLACE INTO books (title, userID) VALUES (?, 1)", [this.state.bookInfo.title, this.state.bookInfo.title]);
-          tx.executeSql("SELECT * FROM books", [], (_, { rows }) =>
-            console.log(JSON.stringify(rows))
-          );
-        }
+      tx => {
+        // TODO: Don't add books that are already attached to the user
+        tx.executeSql("INSERT OR REPLACE INTO books (isbn, title, userID) VALUES (?, ?, 1)", [this.state.isbn, this.state.bookInfo.title]);
+        tx.executeSql("SELECT * FROM books", [], (_, { rows }) =>
+          console.log(JSON.stringify(rows))
+        );
+      }
     );
-    alert(`Scanned "${this.state.bookInfo.title}"`)
+    this.alertInfo();
   }
 
   render() {
@@ -111,5 +114,5 @@ export default class BarcodeScannerScreen extends React.Component {
 
 
 BarcodeScannerScreen.navigationOptions = {
-    title: 'BarcodeScanner',
+  title: 'BarcodeScanner',
 };

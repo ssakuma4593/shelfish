@@ -8,6 +8,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import GridList from '@material-ui/core/GridList';
+import GridListTile from '@material-ui/core/GridListTile';
+import GridListTileBar from '@material-ui/core/GridListTileBar';
+import IconButton from '@material-ui/core/IconButton';
+import InfoIcon from '@material-ui/icons/Info';
 import { SQLite } from 'expo-sqlite';
 
 import { MonoText } from '../components/StyledText';
@@ -21,12 +26,9 @@ export default class HomeScreen extends React.Component {
     myBooks: []
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     booksDb.transaction(tx => {
-      tx.executeSql("SELECT * FROM books WHERE userID = ?", [1], (_, { rows: _array }) =>
-        this.setState(prevState => ({
-          myBooks: [...prevState.myBooks, { _array }]
-        }))
+      tx.executeSql("SELECT * FROM books WHERE userID = ?", [1], (_, { rows: { _array } }) => this.setState({ myBooks: _array })
       )
     })
   }
@@ -44,7 +46,13 @@ export default class HomeScreen extends React.Component {
           <Text style={styles.getStartedText}>
             Welcome to Shelfish!
           </Text>
-          <Text> {this.state.items} </Text>
+          {myBooks ?
+            myBooks.map(book => (
+              <>
+                <Text> {book.title} </Text>
+                <Text> {book.isbn} </Text>
+              </>
+            )) : null}
         </ScrollView>
       </View>
     );
@@ -141,5 +149,18 @@ const styles = StyleSheet.create({
   helpLinkText: {
     fontSize: 14,
     color: '#2e78b7',
-  }
+  },
+  root: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    overflow: 'hidden',
+  },
+  gridList: {
+    width: 500,
+    height: 450,
+  },
+  icon: {
+    color: 'rgba(255, 255, 255, 0.54)',
+  },
 });
