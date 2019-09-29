@@ -66,12 +66,14 @@ export default class BarcodeScannerScreen extends React.Component {
     }
     booksDb.transaction(
         tx => {
-          tx.executeSql("insert into books (title, userID) values (?, 1)", [this.state.bookInfo.title]);
-          tx.executeSql("select * from books", [], (_, { rows }) =>
+          // TODO: Don't add books that are already attached to the user
+          tx.executeSql("INSERT OR REPLACE INTO books (title, userID) VALUES (?, 1)", [this.state.bookInfo.title, this.state.bookInfo.title]);
+          tx.executeSql("SELECT * FROM books", [], (_, { rows }) =>
             console.log(JSON.stringify(rows))
           );
         }
     );
+    alert(`Scanned "${this.state.bookInfo.title}"`)
   }
 
   render() {
