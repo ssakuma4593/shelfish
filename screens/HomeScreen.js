@@ -1,4 +1,3 @@
-import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
 import {
   Image,
@@ -18,21 +17,22 @@ const booksDb = SQLite.openDatabase("books.db");
 
 export default class HomeScreen extends React.Component {
 
-  state ={
-    items: null
+  state = {
+    myBooks: []
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     booksDb.transaction(tx => {
-      tx.executeSql(
-        `select * from books;`,
-        (_, { rows: { _array } }) => this.setState({ items: _array })
-      );
-    });
+      tx.executeSql("SELECT * FROM books WHERE userID = ?", [1], (_, { rows: _array }) =>
+        this.setState(prevState => ({
+          myBooks: [...prevState.myBooks, { _array }]
+        }))
+      )
+    })
   }
   render() {
-    const { items } = this.state;
-    console.log(this.state.items);
+    const { myBooks } = this.state;
+    console.log(myBooks)
 
     return (
       <View style={styles.container}>

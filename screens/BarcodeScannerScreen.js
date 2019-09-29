@@ -64,6 +64,7 @@ export default class BarcodeScannerScreen extends React.Component {
     if (this.state.errors) {
         return false;
     }
+    // TODO: Add exception cases
     booksDb.transaction(
         tx => {
           // TODO: Don't add books that are already attached to the user
